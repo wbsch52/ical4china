@@ -110,7 +110,7 @@ public class ICalendarService {
     }
 
     private String buildCacheFileName(int year) {
-        return year + " festival of china.ics";
+        return year + "_festival_of_china.ics";
     }
 
     private VEvent buildVocationEvent(String name, String desc, String tips, List<Holiday.Item> items) {
