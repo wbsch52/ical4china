@@ -10,8 +10,33 @@
 ### Getting Started
 数据通过[聚合数据](https://www.juhe.cn)平台获取，需要注册聚合数据平台账号并提供appKey
 
-修改application.properties下的:
+使用/安装:
+
+环境: JDK 1.8+
+
+- 直接下载程序包解压后运行
+
+- 将项目克隆至本地自行编译打包
+```
+cd ${project_home}
+mvn clean package
+```
+
+目前提供以下两种方式生成iCalendar文件:
+
+- 本地方式： 直接将iCalendar文件到指定目录下，此方式便于不想搭建服务器的同学直接将今年全年的节假日导出，方便快捷但需要每年生成一次。
+```
+java -cp ical4china.jar com.simon.ical.cli.CommandLineTools -k ${your_key} -o ${out_path}
+// NOTE: 执行 java -cp ical4china.jar com.simon.ical.cli.CommandLineTools -h 可查看使用帮助
+```
+
+- 订阅方式： 以Web方式运行，提供订阅接口直接在mac端进行日历订阅。订阅链接：webcal://localhost:8080/ical
+
+提供application.properties:
+```properties
+ical4china.juhe.app-key=${your_key}
+```
 
 ```
-ical4china.juhe.app-key=${your key}
+java -jar ical4china.jar --spring.config.location=${config_path}
 ```

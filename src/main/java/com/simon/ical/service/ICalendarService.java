@@ -32,12 +32,16 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import lombok.Cleanup;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Simon [xhh52ch@gmail.com]
  */
 @Slf4j
+@Getter
+@Setter
 @Service
 public class ICalendarService {
 
@@ -67,38 +71,14 @@ public class ICalendarService {
             log.info("the cache dir doesn't exists, trying to create.");
             file.mkdir();
         }
-        File[] files = file.listFiles(name -> name.getName().equals(buildCacheFileName(currentYear)));
+        File[] files = file.listFiles(name -> name.getName().equals(buildFileName(currentYear)));
         if (files != null && files.length > 0) {
             log.info("found from cache.");
             return files[0];
         }
         log.info("begin generate ics file.");
-        Calendar calendar = new Calendar();
-        calendar.getProperties().add(Version.VERSION_2_0);
-        calendar.getProperties().add(new AppleCalendarNameProperty(CALENDAR_NAME));
-        calendar.getProperties().add(new AppleCalendarColorProperty(CALENDAR_COLOR));
-        calendar.getProperties().add(new ProdId("xhh52ch@gmail.com"));
-        while (yearMonth.getYear() == currentYear && yearMonth.getMonthValue() <= 12) {
-            List<Holiday> holidays = juheApiService.fetchHolidaysByYearMonth(yearMonth);
-            if (holidays != null && !holidays.isEmpty()) {
-                for (Holiday holiday : holidays) {
-                    String name = holiday.getName();
-                    String desc = holiday.getDesc();
-                    String tips = holiday.getTips();
-                    List<Holiday.Item> items = holiday.getItems();
-                    VEvent event = buildVocationEvent(name, desc, tips, items);
-                    calendar.getComponents().add(event);
-                    List<VEvent> workEvents = buildWorkEvent(name, items);
-                    for (VEvent workEvent : workEvents) {
-                        calendar.getComponents().add(workEvent);
-                    }
-
-                }
-            }
-            yearMonth = yearMonth.plusMonths(1);
-        }
-
-        File cacheFile = new File(CACHE_PATH + "/" + buildCacheFileName(currentYear));
+        Calendar calendar = buildCalendar(yearMonth);
+        File cacheFile = new File(CACHE_PATH + "/" + buildFileName(currentYear));
         if (!cacheFile.exists()) {
             cacheFile.createNewFile();
         }
@@ -109,7 +89,24 @@ public class ICalendarService {
         return cacheFile;
     }
 
-    private String buildCacheFileName(int year) {
+    public String write(String path) throws IOException {
+        if (!path.endsWith("/")) {
+            path += "/";
+        }
+        YearMonth yearMonth = YearMonth.now().withMonth(1);
+        int currentYear = yearMonth.getYear();
+        Calendar calendar = buildCalendar(yearMonth);
+        File file = new File(path + buildFileName(currentYear));
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+        @Cleanup FileOutputStream out = new FileOutputStream(file);
+        CalendarOutputter outputter = new CalendarOutputter();
+        outputter.output(calendar, out);
+        return file.getAbsolutePath();
+    }
+
+    private String buildFileName(int year) {
         return year + "_festival_of_china.ics";
     }
 
@@ -139,5 +136,34 @@ public class ICalendarService {
                     event.getProperties().add(RANDOM_UID_GENERATOR.generateUid());
                     return event;
                 }).collect(Collectors.toList());
+    }
+
+    private Calendar buildCalendar(YearMonth yearMonth) {
+        int currentYear = yearMonth.getYear();
+        Calendar calendar = new Calendar();
+        calendar.getProperties().add(Version.VERSION_2_0);
+        calendar.getProperties().add(new AppleCalendarNameProperty(CALENDAR_NAME));
+        calendar.getProperties().add(new AppleCalendarColorProperty(CALENDAR_COLOR));
+        calendar.getProperties().add(new ProdId("xhh52ch@gmail.com"));
+        while (yearMonth.getYear() == currentYear) {
+            List<Holiday> holidays = juheApiService.fetchHolidaysByYearMonth(yearMonth);
+            if (holidays != null && !holidays.isEmpty()) {
+                for (Holiday holiday : holidays) {
+                    String name = holiday.getName();
+                    String desc = holiday.getDesc();
+                    String tips = holiday.getTips();
+                    List<Holiday.Item> items = holiday.getItems();
+                    VEvent event = buildVocationEvent(name, desc, tips, items);
+                    calendar.getComponents().add(event);
+                    List<VEvent> workEvents = buildWorkEvent(name, items);
+                    for (VEvent workEvent : workEvents) {
+                        calendar.getComponents().add(workEvent);
+                    }
+
+                }
+            }
+            yearMonth = yearMonth.plusMonths(1);
+        }
+        return calendar;
     }
 }

@@ -25,12 +25,16 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.util.Collections;
 import java.util.List;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author Simon [xhh52ch@gmail.com]
  */
+@Getter
+@Setter
 @Slf4j
 @Service
 public class JuheApiService {
