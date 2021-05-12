@@ -43,3 +43,8 @@ ical4china.juhe.app-key=${your_key}
 ```
 java -jar ical4china.jar --spring.config.location=${config_path}
 ```
+---
+### 捐赠
+如果该工具对你有帮助，可以考虑请我喝杯茶。
+![qrcode](https://user-images.githubusercontent.com/31718669/117907814-03d0ea00-b30a-11eb-807e-9cbe1d60df9e.jpeg)
+
