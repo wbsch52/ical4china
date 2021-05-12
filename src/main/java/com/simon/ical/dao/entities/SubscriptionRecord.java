@@ -20,6 +20,7 @@ public class SubscriptionRecord {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     private String ip;
+    private Integer times;
     private Integer createdDate;
     private Integer modifiedDate;
 }

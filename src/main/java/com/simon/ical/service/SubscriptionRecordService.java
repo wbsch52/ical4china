@@ -30,11 +30,13 @@ public class SubscriptionRecordService {
         SubscriptionRecord existed = recordRepository.findByIp(ip);
         if (existed != null) {
             existed.setModifiedDate(TimeUtils.now());
+            existed.setTimes(existed.getTimes() + 1);
             recordRepository.save(existed);
         } else {
             int now = TimeUtils.now();
             SubscriptionRecord record = new SubscriptionRecord();
             record.setIp(ip);
+            record.setTimes(1);
             record.setCreatedDate(now);
             record.setModifiedDate(now);
             recordRepository.save(record);
