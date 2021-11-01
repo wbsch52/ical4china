@@ -23,7 +23,7 @@ public class ICalendarController {
 
     @GetMapping(value = "/ical", produces = "text/calendar; charset=UTF-8")
     public ResponseEntity<FileSystemResource> generate() throws IOException {
-        File file = iCalendarService.getOrGenerateIcsContent();
+        File file = iCalendarService.getIcsFile();
         FileSystemResource fileSystemResource = new FileSystemResource(file);
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + file.getName());

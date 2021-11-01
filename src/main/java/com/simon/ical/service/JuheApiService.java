@@ -1,5 +1,6 @@
 package com.simon.ical.service;
 
+import com.google.common.base.Throwables;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.simon.ical.conf.JuheProperties;
 import com.simon.ical.domain.Holiday;
+import com.simon.ical.domain.SimpleHoliday;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.StatusLine;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -39,7 +42,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 public class JuheApiService {
 
-    private static final String JUHE_API_PATTERN = "http://v.juhe.cn/calendar/month?key=%s&year-month=%s";
+    private static final String HOLIDAY_BY_MONTH_URL_PATTERN = "http://v.juhe.cn/calendar/month?key=%s&year-month=%s";
+    private static final String HOLIDAY_BY_YEAR_URL_PATTERN = "http://v.juhe.cn/calendar/year?key=%s&year=%s";
     private static final HttpClient httpClient = HttpClients.createDefault();
     private static final DateTimeFormatter PARAMETER_FORMATTER = DateTimeFormatter.ofPattern("yyyy-M");
     private static final DateTimeFormatter FESTIVAL_FORMATTER = new DateTimeFormatterBuilder().appendOptional(DateTimeFormatter.ofPattern("yyyy-M-d"))
@@ -61,11 +65,71 @@ public class JuheApiService {
             return Collections.emptyList();
         }
         String yearMonthAsString = PARAMETER_FORMATTER.format(yearMonth);
-        String url = String.format(JUHE_API_PATTERN, juheProperties.getAppKey(), yearMonthAsString);
+        String url = String.format(HOLIDAY_BY_MONTH_URL_PATTERN, juheProperties.getAppKey(), yearMonthAsString);
         HttpGet get = new HttpGet(url);
         List<Holiday> result = httpClient.execute(get, resp -> resolveResponse(yearMonth, resp));
         log.info("fetched {} holiday(s) from Juhe platform, result:{}", result.size(), result);
         return result;
+    }
+
+    @SneakyThrows
+    public List<SimpleHoliday> fetchHolidaysByYear(Year year) {
+        log.info("fetching all holidays of the year({})", year);
+        if (year == null) {
+            log.warn("the year is null.");
+            return Collections.emptyList();
+        }
+
+        String url = String.format(HOLIDAY_BY_YEAR_URL_PATTERN, juheProperties.getAppKey(), year.toString());
+        HttpGet get = new HttpGet(url);
+        return httpClient.execute(get, resp -> {
+            try {
+                StatusLine statusLine = resp.getStatusLine();
+                if (statusLine == null || statusLine.getStatusCode() != 200) {
+                    log.error("cannot fetch holidays from Juhe platform.");
+                    throw new RuntimeException("cannot fetch holidays from Juhe platform.");
+                }
+                String entity = EntityUtils.toString(resp.getEntity());
+                JsonNode rootNode = objectMapper.readTree(entity);
+                JsonNode errorCode = rootNode.get("error_code");
+                if (errorCode.asInt() == 217701) {
+                    log.warn("no data returned from Juhe platform maybe the holidays has not been scheduled yet. year:{}", year);
+                    return Collections.emptyList();
+                } else if (errorCode.asInt() != 0) {
+                    log.error("cannot fetch holidays from Juhe platform. response:{}", rootNode);
+                    if (errorCode.asInt() == 10001) {
+                        throw new IllegalStateException("wrong key of Juhe platform.");
+                    }
+                    return Collections.emptyList();
+                }
+
+                ArrayNode holidayList = (ArrayNode) rootNode.get("result").get("data").get("holiday_list");
+                if (holidayList.isEmpty()) {
+                    log.info("current year({}) has no any holidays.", year);
+                    return Collections.emptyList();
+                }
+
+                List<SimpleHoliday> holidays = Lists.newArrayList();
+                for (JsonNode ele : holidayList) {
+                    String startDateAsString = ele.get("startday").asText();
+                    LocalDate start = LocalDate.from(FESTIVAL_FORMATTER.parse(startDateAsString));
+                    String name = ele.get("name").asText();
+                    SimpleHoliday holiday = new SimpleHoliday();
+                    holiday.setStart(start);
+                    holiday.setName(name);
+                    holidays.add(holiday);
+                }
+                return holidays;
+            } catch (Exception e) {
+                log.error("caught an error while fetching holidays", e);
+                if (e instanceof RuntimeException) {
+                    throw e;
+                }
+                throw new RuntimeException(Throwables.getStackTraceAsString(e), e);
+            } finally {
+                EntityUtils.consumeQuietly(resp.getEntity());
+            }
+        });
     }
 
     private List<Holiday> resolveResponse(YearMonth yearMonth, HttpResponse resp) throws IOException {
