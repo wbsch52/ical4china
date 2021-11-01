@@ -1,6 +1,7 @@
 package com.simon.ical.service;
 
 import com.simon.ical.commons.GlobalConstant;
+import com.simon.ical.commons.IpHolder;
 import com.simon.ical.domain.Holiday;
 import com.simon.ical.domain.SimpleHoliday;
 import com.simon.ical.properties.AppleCalendarColorProperty;
@@ -32,6 +33,7 @@ import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import lombok.Cleanup;
@@ -51,6 +53,8 @@ public class ICalendarService {
     private static final ZoneOffset ZONE_OFFSET = ZoneOffset.of("+8");
     private static final RandomUidGenerator RANDOM_UID_GENERATOR = new RandomUidGenerator();
 
+    private static final AtomicInteger count = new AtomicInteger();
+
     static {
         TimeZoneRegistry registry = TimeZoneRegistryFactory.getInstance().createRegistry();
         TIME_ZONE = registry.getTimeZone("Asia/Shanghai");
@@ -65,6 +69,9 @@ public class ICalendarService {
         if (!file.exists()) {
             throw new RuntimeException("the ics file doesn't exists");
         }
+        int count = ICalendarService.count.incrementAndGet();
+        String ip = IpHolder.get();
+        log.info("returning ics file to {}, times:{}", ip, count);
         return file;
     }
 
