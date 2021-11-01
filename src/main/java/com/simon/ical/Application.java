@@ -8,11 +8,13 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * @author Simon [xhh52ch@gmail.com]
  */
 @SpringBootApplication
+@EnableScheduling
 @EnableConfigurationProperties(JuheProperties.class)
 @EnableAspectJAutoProxy(proxyTargetClass = true)
 public class Application {

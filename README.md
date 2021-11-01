@@ -7,7 +7,7 @@
 自己又有点小洁癖不愿意使用第三方的日历软件，在网上也没有找到靠谱的iCalendar订阅服务所以自己造了个轮子，也希望这个程序能够帮助更多与我有相同痛点的人。
 
 最终效果：
-![image](https://user-images.githubusercontent.com/31718669/109748555-09c49380-7c14-11eb-8972-96ed60214d54.png)
+![image](https://user-icmages.githubusercontent.com/31718669/109748555-09c49380-7c14-11eb-8972-96ed60214d54.png)
 
 ---
 ### Getting Started
