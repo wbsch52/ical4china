@@ -30,7 +30,7 @@ public class ICalendarController {
     @Autowired
     private SubscriptionRecordService subscriptionRecordService;
 
-    @GetMapping(value = "/ical", produces = "text/calendar; charset=UTF-8")
+    @GetMapping(value = {"/ical", "/cal.ics"}, produces = "text/calendar; charset=UTF-8")
     public ResponseEntity<FileSystemResource> generate() throws IOException {
         File file = iCalendarService.getIcsFile();
         FileSystemResource fileSystemResource = new FileSystemResource(file);
