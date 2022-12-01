@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-parent</artifactId>
-        <version>2.2.6.RELEASE</version>
+        <version>2.7.5</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.simon.ical</groupId>
@@ -15,7 +15,7 @@
     <url>https://github.com/wbsch52/ical4china</url>
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
     </properties>
 
     <dependencies>
@@ -61,7 +61,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.14</version>
+            <version>1.18.24</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -113,7 +113,7 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>2.2.6.RELEASE</version>
+                <version>2.7.5</version>
                 <executions>
                     <execution>
                         <goals>
